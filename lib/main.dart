@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqlite_api.dart';
 import 'package:user_data/addUser.dart';
 import 'package:user_data/database.dart';
 import 'package:user_data/user.dart';
+import 'package:http/http.dart' as http;
 
 void main() => runApp(MyApp());
 
@@ -34,9 +37,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('1.');
     if (userList == null) {
-      debugPrint('2.');
       userList = List<User>();
       updateUserList();
     }
@@ -44,6 +45,16 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('User Data'),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.file_download),
+            color: Colors.white,
+            onPressed: () {
+              _addUserFromUrl();
+            },
+            tooltip: 'User get from URL',
+          )
+        ],
       ),
       body: getUserList(),
       floatingActionButton: FloatingActionButton(
@@ -116,5 +127,23 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _deleteUser(int id) async {
     int result = await databaseHelper.deleteUser(id);
+  }
+
+  void _addUserFromUrl() async {
+    final response = await fetchPost();
+
+    var responseBody = json.decode(response.body);
+    var dataArray = responseBody['data'];
+
+    for (int i = 0; i < dataArray.length; i++) {
+      var user = User.fromJson(responseBody['data'][i]);
+      debugPrint(user.toMap().toString());
+      await databaseHelper.insertUser(user);
+      updateUserList();
+    }
+  }
+
+  Future<http.Response> fetchPost() async {
+    return http.get('https://reqres.in/api/users?page=1');
   }
 }

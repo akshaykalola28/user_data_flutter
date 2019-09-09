@@ -8,6 +8,11 @@ class User {
 
   User.withId(this._id, this._firstName, this._lastName, this._email);
 
+  User.fromJson(Map<String, dynamic> map)
+      : _firstName = map['first_name'],
+        _lastName = map['first_name'],
+        _email = map['email'];
+
   int get id => _id;
 
   String get firstName => _firstName;
